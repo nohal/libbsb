@@ -1,0 +1,24 @@
+AT_BANNER([[Checking TIFF conversions]])
+
+
+AT_SETUP([convert .kap to .tif])
+
+AT_CHECK([test -x $abs_top_builddir/bsb2tif || exit 77], ignore)
+
+AT_CHECK([at_wrap bsb2tif $abs_top_srcdir/australia4c.kap ../test_bsb2tif.tif])
+
+# First compare with little-endian tif, then try big-endian tif
+AT_CHECK([cmp ../test_bsb2tif.tif $abs_top_srcdir/tests/australia4c.tif ||\
+		cmp ../test_bsb2tif.tif $abs_top_srcdir/tests/australia4c_be.tif], 0, ignore)
+
+AT_CLEANUP
+
+
+AT_SETUP([convert .tif to .kap])
+
+AT_CHECK([test -x $abs_top_builddir/tif2bsb || exit 77], ignore)
+
+AT_CHECK([at_wrap tif2bsb -c 4 $abs_top_srcdir/australia4c.kap ../test_bsb2tif.tif ../test_tif2bsb.kap])
+AT_CHECK([cmp ../test_tif2bsb.kap $abs_top_srcdir/australia4c.kap])
+
+AT_CLEANUP

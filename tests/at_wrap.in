@@ -1,0 +1,22 @@
+#! @SHELL@
+#
+# $Id: at_wrap.in,v 1.3 2004/12/22 13:04:00 stuart_hc Exp $
+#
+# @configure_input@
+# Wrapper around programs to be tested by autotest.
+# Facilitates testing with valgrind and wine.
+
+
+case "host_alias:@host_alias@" in
+	*-x-mingw32*)
+		# Check for cross-compilation to mingw32 and run wine for the tests
+		exe=$1.exe
+		shift
+		exec wine '@abs_top_builddir@'/$exe ${1+"$@"}
+	;;
+	*)
+		# E.g.
+		# env AT_EXEC_OPTS='valgrind -q --tool=memcheck --leak-check=yes' make check
+		exec $AT_EXEC_OPTS ${1+"$@"}
+	;;
+esac

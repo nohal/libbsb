@@ -1,0 +1,45 @@
+Changes from 0.0.6 to 0.0.7
+ - Fix buffer overflow in next_line() function which can be exploited
+   by carefully crafted BSB file
+ - Fix incorrect num_colors computation for some tif images.  Use a
+   rigorous scan of the entire tif image first to count the number of colors.
+ - Add trap in bsb_read_row() to avoid slow reading on corrupted rows.
+ - Add valgrind-check make target which runs valgrind over all tests.
+ - Moved test images under tests/ subdir.
+
+Changes from 0.0.5 to 0.0.6
+ - Added support for older NOS/GEO file formats (.NOS and .NO1 extensions)
+ - Fixed tif2bsb where incorrect color handling created blank .KAP files
+ - tif2bsb now gracefully aborts for TIFF files it cannot read
+ - Support for building with MSVC++ under GNU make (from the MSYS package)
+ - Made library API less awkward
+ - Portability fixes for Alpha platform
+ - Add at_wrap script to allow tests to be run under wine or valgrind
+ - Make bsbfix regression test more portable
+ - Support out-of-src-tree build & test
+
+Changes from 0.0.4 to 0.0.5
+ - Fixed tif2bsb conversion errors for 4-bits-per-sample TIFF files.
+ - Added PNG regression test.
+ - Portability fixes (FreeBSD, Win32, MacOS X TIFF test)
+
+Changes from 0.0.3 to 0.0.4
+ - Fixed bsb2tif conversion errors where "Short Row" was reported and output
+   was corrupted (also bsb2ppm).
+ - Fixed bsb2tif infinite loop bug.
+ - Added bsb2png utility (thanks to Stefan Petersen).
+
+Changes from 0.0.2 to 0.0.3
+ - Added bsbfix utility
+ - New functions bsb_get_header_size() and bsb_write_index()
+ - Fixed handling of colormap (BSB starts at index 1, tiff starts at 0)
+ - Added sample BSB file: australia4c.kap
+ - Fixed bugs in bsb2tif which gave broken output tif files
+ - Fixed bug in ppm2bsb on big-endian machines
+ - Renamed configure.in to configure.ac
+ - Added traps for bad template file input and wrong number of args
+ - Added autotest testsuite
+
+Changes from 0.0.1 to 0.0.2
+ - Added PPM conversion tools
+ - Fixed tif2bsb to actually work

@@ -1,0 +1,11 @@
+AT_BANNER([[Checking PNG conversions]])
+
+AT_SETUP([convert .kap to .png])
+
+AT_CHECK([test -x $abs_top_builddir/bsb2png || exit 77], ignore)
+
+AT_CHECK([at_wrap bsb2png $abs_top_srcdir/australia4c.kap ../test_bsb2png.png])
+AT_CHECK([cmp ../test_bsb2png.png $abs_top_srcdir/tests/australia4c.png ||\
+			cmp ../test_bsb2png.png $abs_top_srcdir/tests/australia4c_png126.png], 0, ignore)
+
+AT_CLEANUP

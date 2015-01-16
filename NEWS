@@ -1,0 +1,36 @@
+libbsb-0.0.7
+============
+  Fix exploitable buffer overflow when reading carefully crafted .KAP file.
+  Fixed tif2bsb's TIFF color table reading which produced corrupted .KAP files.
+  Made .KAP reading more robust on corrupted .KAP files.
+  Added valgrind-check make target.
+
+libbsb-0.0.6
+============
+  Added support for older NOS/GEO file formats (.NOS and .NO1 extensions).
+  Fixed tif2bsb where incorrect color handling created blank .KAP files.
+  Fixed minor memory leaks and improved error diagnostics.
+
+libbsb-0.0.5
+============
+  Fixed tif2bsb conversion errors for 4-bits-per-sample TIFF files.
+  Added PNG file test.
+  Portability fixes (FreeBSD, Win32, MacOS X TIFF test)
+
+libbsb-0.0.4
+============
+  Fixed bsb2tif conversion errors where "Short Row" was reported and output
+    was corrupted (also bsb2ppm).
+  Fixed bsb2tif infinite loop bug.
+  Added bsb2png utility (thanks to Stefan Petersen).
+
+libbsb-0.0.3
+============
+  Lots of bug fixes, especially for bsb2tif.
+  New utility - bsbfix - for fixing the index table of BSB files.
+
+libbsb-0.0.2
+============
+  First sourceforge release with added ppm2bsb and bsb2ppm commands.
+  Version 0.0.1 was released in Dec 2000 but mysteriously disappeared from
+  its web page on members.optusnet.com.au.

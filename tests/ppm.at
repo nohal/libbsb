@@ -1,0 +1,11 @@
+AT_BANNER([[Checking PPM conversions]])
+
+AT_SETUP([convert .kap to .ppm])
+AT_CHECK([at_wrap bsb2ppm $abs_top_srcdir/australia4c.kap ../test_bsb2ppm.ppm])
+AT_CHECK([cmp ../test_bsb2ppm.ppm $abs_top_srcdir/tests/australia4c.ppm])
+AT_CLEANUP
+
+AT_SETUP([convert .ppm to .kap])
+AT_CHECK([at_wrap ppm2bsb $abs_top_srcdir/australia4c.kap ../test_bsb2ppm.ppm ../test_ppm2bsb.kap])
+AT_CHECK([cmp ../test_ppm2bsb.kap $abs_top_srcdir/australia4c.kap])
+AT_CLEANUP

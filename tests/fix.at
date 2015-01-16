@@ -1,0 +1,15 @@
+AT_BANNER([[Checking bsbfix]])
+
+AT_SETUP([delete .kap index table then fix it])
+
+AT_CHECK([cp $abs_top_srcdir/australia4c.kap ../test_bsbfix.kap])
+
+AT_CHECK([at_wrap bsbfix -d ../test_bsbfix.kap])
+
+AT_CHECK([cmp ../test_bsbfix.kap $abs_top_srcdir/australia4c.kap], 1, [ignore], [ignore])
+
+AT_CHECK([at_wrap bsbfix ../test_bsbfix.kap])
+
+AT_CHECK([cmp ../test_bsbfix.kap $abs_top_srcdir/australia4c.kap])
+
+AT_CLEANUP

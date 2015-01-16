@@ -1,0 +1,84 @@
+README for libbsb
+=================
+
+Building and installing
+-----------------------
+  For Unix and Unix-like OSs (including Mac OS X):
+      ./configure
+      make
+      make check
+      make install
+
+  "make install" will install the library libbsb.a, its C header file bsb.h
+  and the following conversion programs:
+    bsb2ppm        ppm2bsb        bsbfix
+    bsb2tif        tif2bsb
+    bsb2png
+
+  For WIN32 native builds you must install MSYS to be able to run the
+  configure script.  MSYS can be downloaded gratis from
+  http://www.mingw.org/msys.shtml and once installed run the same commands
+  as above for Unix OSs.
+    Or, to select the MSVC compiler instead of gcc use:
+      ./configure CC=cl
+    Or, for a cross-compiler built to target i686-x-mingw32msvc use:
+      ./configure --host=i686-x-mingw32msvc
+
+  Optional libraries
+  ------------------
+  You must have libtiff installed to be able to build bsb2tif and tif2bsb.
+  For LZW compression support use libtiff 3.7.0 or later.
+    libtiff - http://www.libtiff.org/
+
+  For bsb2png you must have libpng installed.
+    libpng  - http://www.libpng.org/pub/png/libpng.html
+
+
+Usage
+-----
+A sample BSB file is included in the release.  The image is based on a hand
+drawn map of Australia so it is not intended for navigational purposes :)
+    australia4c.kap  - 4 color chart of Australia
+
+
+  bsb2tif & tif2bsb
+  -----------------
+  To convert a BSB file to a TIFF file:
+      bsb2tif australia4c.kap australia4c.tif
+  
+  To convert a TIFF file to BSB you need a template file containing all the
+  cartographic information appropriate for the image.  The template file is
+  merely the ASCII text lines at the start of a BSB file, and for the conversion
+  to work it must contain the RA=<width>,<height> data in the "BSB/" token.
+  
+    In this example I used the original BSB file as the template:
+      tif2bsb australia4c.kap edited.tif new.kap
+  
+    In this example the max number of colors for the BSB colormap is specified:
+      tif2bsb -c 4 australia4c.kap edited.tif new.kap
+
+
+  bsb2ppm & ppm2bsb
+  -----------------
+  Usage of bsb2ppm and ppm2bsb is similiar to the TIFF utilities.
+      bsb2ppm australia4c.kap australia4c.ppm
+      ppm2bsb australia4c.kap edited.ppm new.kap
+  
+  
+  bsbfix
+  ------
+  The utility bsbfix fixes the index table in a BSB file that has become
+  invalid.  A BSB file becomes invalid whenever you edit the cartographic
+  information in the ASCII text header at the start of a BSB file using a text
+  editor like vi or emacs.
+    E.g.
+      Edit the BSB file to change registration points in the text header:
+        vi australia4c.kap
+      Fix the binary index table in the BSB file:
+        bsbfix australia4c.kap
+  
+  
+Author
+------
+
+Send feedback to Stuart Cunningham <stuart_hc@users.sourceforge.net>
