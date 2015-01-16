@@ -13,7 +13,8 @@ Building and installing
   and the following conversion programs:
     bsb2ppm        ppm2bsb        bsbfix
     bsb2tif        tif2bsb
-    bsb2png
+    bsb2png        
+  and BSB viewer bsbview
 
   For WIN32 native builds you must install MSYS to be able to run the
   configure script.  MSYS can be downloaded gratis from
@@ -32,6 +33,10 @@ Building and installing
 
   For bsb2png you must have libpng installed.
     libpng  - http://www.libpng.org/pub/png/libpng.html
+
+  For bsbview you must have lib Qt3 development (libqt3-mt). For windows 
+  you can use the free Qt3/win version. The QTDIR environment must be set 
+  to the root of your Qt3 installation.
 
 
 Usage
@@ -76,9 +81,23 @@ drawn map of Australia so it is not intended for navigational purposes :)
         vi australia4c.kap
       Fix the binary index table in the BSB file:
         bsbfix australia4c.kap
-  
+
+  bsbview  [-t] [-v] [-q] [<bsbfile>]
+  -------
+  This is the BSB chart viewer.
+  Use mouse right click for pop menu. 
+  The About info shows key shortcuts and mouse use.
+  Parameters:
+  -t test geotransformation (converts all reference points 
+     from chart to lat/lon and back and displays relative errors)
+  -v verbose output for -t
+  -q quit without displaying the graphics (only with -t)
+  <bsbfile> the file to show (when skipped it will ask you to choose one)
+            With popup menu you may choose another .KAP file.
+
   
 Author
 ------
 
 Send feedback to Stuart Cunningham <stuart_hc@users.sourceforge.net>
+For 0.0.8 changes and bsbview send feedback to Michal Krombholz <mikrom@users.sourceforge.net>

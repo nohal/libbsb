@@ -19,7 +19,7 @@
  *	License along with this library; if not, write to the Free Software
  *	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *	$Id: bsb2png.c,v 1.5 2004/11/03 13:29:39 stuart_hc Exp $
+ *	$Id: bsb2png.c,v 1.7 2007/02/05 17:08:18 mikrom Exp $
  *
  */
 

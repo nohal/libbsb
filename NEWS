@@ -1,3 +1,15 @@
+libbsb-0.1.0
+============
+  Fully functional chart viewer bsbview with zooming, panning 
+  and georeference capabilitied. Requires QT3 library.
+  Extended fiunctionality of libbsb:
+  - added capability to read 'continued lines' (lines that span NLs)
+  - added reading of more chart data including reference points, 
+    border points, geotransformation polynomial, projection and more
+  - added geotransformation routines using polynomial coeffitients
+  - improved raster read performance by pre-reading the index and 
+    added optimized bsb_read_row_at  
+
 libbsb-0.0.7
 ============
   Fix exploitable buffer overflow when reading carefully crafted .KAP file.

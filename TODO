@@ -1,0 +1,13 @@
+bsbview - graphical viewer
+--------------------------
+- add ability to zoom in further than one-to-one pixel by scaling pixels
+
+Batch processing
+----------------
+- add command line options to conversion tools to more easily permit batch
+  conversions, for example *.KAP or everything in a given directory.  This
+  has been requested by WIN32 users who cannot use a shell to do this.
+  
+GeoTIFF support
+---------------
+- add conversion to and from GeoTIFF format which is an open standard

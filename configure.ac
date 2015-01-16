@@ -1,13 +1,13 @@
-dnl $Id: configure.ac,v 1.23 2004/12/22 13:11:36 stuart_hc Exp $
+dnl $Id: configure.ac,v 1.25 2007/02/18 07:35:04 mikrom Exp $
 dnl
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(bsb2tif.c)
-AM_INIT_AUTOMAKE(libbsb, 0.0.7)
+AM_INIT_AUTOMAKE(libbsb, 0.0.8)
 
 dnl AC_PROG_CC finds CC and defaults CFLAGS (usually -g -O2)
 orig_cflags=$CFLAGS
 AC_PROG_CC
-
+AC_PROG_CXX
 
 dnl Default CFLAGS for developer's convenience and avoid ranlib with MSVC
 use_msvc=no
@@ -51,6 +51,28 @@ AM_CONDITIONAL(HAVE_LIBPNG, test x"$have_libpng" = "xyes")
 if test x"$have_libpng" = "xno" ; then
 	AC_MSG_WARN([*** PNG conversion tools will not be built ***])
 fi
+
+have_qt=no
+AC_PATH_X
+qtdir=${QTDIR}
+if test x"$qtdir" = "x" ; then
+        dnl Try to locate Qt4 in well-known places
+        AC_CHECK_FILE([/usr/share/qt4],
+                      [qtdir=/usr/share/qt4],
+                      [qtdir=/usr/lib/qt4])
+        export QTDIR=$qtdir
+	AC_MSG_WARN([QTDIR not set, assuming $qtdir but build will fail if QTDIR env var not set])
+fi
+qt_includes=$qtdir/include
+export CPPFLAGS="$CPPFLAGS -I$qt_includes"
+AC_CHECK_HEADER([QtCore/qglobal.h], [ have_libqt=yes ] )
+AM_CONDITIONAL(HAVE_LIBQT, test x"$have_libqt" = "xyes")
+if test x"$have_libqt" = "xyes" ; then
+   echo "Qt4 seems OK. Including bsbview in the build!"
+else
+   AC_MSG_WARN([*** bsbview will not be built (no QT or QTDIR wrong) ***])
+fi
+
 
 dnl Test for valgrind and test which args are needed for memcheck.
 dnl Using -q --leak-check on valgrind pre-2.2 gives stderr output when

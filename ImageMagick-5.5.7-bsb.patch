@@ -1,0 +1,430 @@
+diff -Nru ImageMagick-5.5.7/coders/Makefile.am ImageMagick-5.5.7-new/coders/Makefile.am
+--- ImageMagick-5.5.7/coders/Makefile.am	2003-05-12 21:00:59.000000000 +0100
++++ ImageMagick-5.5.7-new/coders/Makefile.am	2004-01-19 13:23:12.000000000 +0000
+@@ -43,7 +43,7 @@
+ endif
+ 
+ MAGICK_CODER_SRCS = \
+-  art.c avi.c avs.c bmp.c caption.c clipboard.c cmyk.c cut.c dcm.c \
++  art.c avi.c avs.c bmp.c bsb.c caption.c clipboard.c cmyk.c cut.c dcm.c \
+   dib.c dps.c dpx.c emf.c ept.c fax.c fits.c fpx.c gif.c gradient.c \
+   gray.c histogram.c html.c icon.c jbig.c jp2.c jpeg.c label.c \
+   magick.c map.c mat.c matte.c meta.c miff.c mono.c mpc.c mpeg.c \
+@@ -87,7 +87,7 @@
+ 
+ # Modules which are to be built
+ pkg_LTLIBRARIES = \
+-  art.la avi.la avs.la bmp.la caption.la cmyk.la cut.la dcm.la dib.la dps.la \
++  art.la avi.la avs.la bmp.la bsb.la caption.la cmyk.la cut.la dcm.la dib.la dps.la \
+   dpx.la ept.la fax.la fits.la fpx.la gif.la gradient.la gray.la \
+   histogram.la html.la icon.la jbig.la jp2.la jpeg.la label.la \
+   magick.la map.la mat.la matte.la meta.la miff.la mono.la mpc.la mpeg.la \
+@@ -126,6 +126,11 @@
+ bmp_la_LDFLAGS      = $(MODULECOMMONFLAGS)
+ bmp_la_LIBADD       = $(LIBMAGICK)
+ 
++# BSB module
++bsb_la_SOURCES      = bsb.c
++bsb_la_LDFLAGS      = $(MODULECOMMONFLAGS)
++bsb_la_LIBADD       = $(LIBMAGICK)
++
+ # CAPTION module
+ caption_la_SOURCES  = caption.c
+ caption_la_LDFLAGS  = $(MODULECOMMONFLAGS)
+diff -Nru ImageMagick-5.5.7/coders/bsb.c ImageMagick-5.5.7-new/coders/bsb.c
+--- ImageMagick-5.5.7/coders/bsb.c	1970-01-01 01:00:00.000000000 +0100
++++ ImageMagick-5.5.7-new/coders/bsb.c	2004-03-09 11:06:04.000000000 +0000
+@@ -0,0 +1,382 @@
++/*
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%                            BBBB   SSSSS  BBBB                               %
++%                            B   B  SS     B   B                              %
++%                            BBBB    SSS   BBBB                               %
++%                            B   B     SS  B   B                              %
++%                            BBBB   SSSSS  BBBB                               %
++%                                                                             %
++%                                                                             %
++%                    Read/Write ImageMagick Image Format.                     %
++%                                                                             %
++%                                                                             %
++%                              Software Design                                %
++%                                John Cristy                                  %
++%                                 July 1992                                   %
++%                                                                             %
++%                                                                             %
++%  Copyright (C) 2000 ImageMagick Studio, a non-profit organization dedicated %
++%  to making software imaging solutions freely available.                     %
++%                                                                             %
++%  Permission is hereby granted, free of charge, to any person obtaining a    %
++%  copy of this software and associated documentation files ("ImageMagick"),  %
++%  to deal in ImageMagick without restriction, including without limitation   %
++%  the rights to use, copy, modify, merge, publish, distribute, sublicense,   %
++%  and/or sell copies of ImageMagick, and to permit persons to whom the       %
++%  ImageMagick is furnished to do so, subject to the following conditions:    %
++%                                                                             %
++%  The above copyright notice and this permission notice shall be included in %
++%  all copies or substantial portions of ImageMagick.                         %
++%                                                                             %
++%  The software is provided "as is", without warranty of any kind, express or %
++%  implied, including but not limited to the warranties of merchantability,   %
++%  fitness for a particular purpose and noninfringement.  In no event shall   %
++%  ImageMagick Studio be liable for any claim, damages or other liability,    %
++%  whether in an action of contract, tort or otherwise, arising from, out of  %
++%  or in connection with ImageMagick or the use or other dealings in          %
++%  ImageMagick.                                                               %
++%                                                                             %
++%  Except as contained in this notice, the name of the ImageMagick Studio     %
++%  shall not be used in advertising or otherwise to promote the sale, use or  %
++%  other dealings in ImageMagick without prior written authorization from the %
++%  ImageMagick Studio.                                                        %
++%                                                                             %
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%
++%
++*/
++
++/*
++  Include declarations.
++*/
++#include "magick/studio.h"
++#include "magick/attribute.h"
++#include "magick/blob.h"
++#include "magick/error.h"
++#include "magick/list.h"
++#include "magick/magick.h"
++#include "magick/monitor.h"
++#include "magick/static.h"
++#include "magick/utility.h"
++
++/*
++  Forward declarations.
++*/
++static unsigned int
++  WriteBSBImage(const ImageInfo *,Image *);
++
++/*
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%   R e a d B S B I m a g e                                                   %
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%
++%  Method ReadBSBImage reads a BSB image file and returns it.  It
++%  allocates the memory necessary for the new Image structure and returns a
++%  pointer to the new image.
++%
++%  ReadBSBImage was contributed by Stuart Cunningham <stuart_hc@sourceforge.net>
++%
++%  The format of the ReadBSBImage method is:
++%
++%      Image *ReadBSBImage(const ImageInfo *image_info,ExceptionInfo *exception)
++%
++%  A description of each parameter follows:
++%
++%    o image:  Method ReadBSBImage returns a pointer to the image after
++%      reading.  A null image is returned if there is a memory shortage or
++%      if the image cannot be read.
++%
++%    o image_info: Specifies a pointer to an ImageInfo structure.
++%
++%    o exception: return any errors or warnings in this structure.
++%
++%
++*/
++
++#include <stdio.h>
++#include <string.h>
++
++
++char mul_mask[8] = { 0, 63, 31, 15, 7, 3, 1, 0 };
++
++/* Assumes file pointer is at start of run-length encoded bitstream */
++void read_row(Image *image, int depth, int width, int row)
++{
++	int		c, row_num = 0;
++	int		pixel, multiplier, i, written = 0;
++	IndexPacket	*indexes;
++
++	/* The row number is stored in the low 7 bits of each byte.				*/
++	/* The 8th bit indicates if row number is continued in the next byte.	*/
++	do {
++		c = ReadBlobByte(image);
++		row_num = ((row_num & 0x7f) << 7) + c;
++	} while (c >= 0x80);
++
++	SetImagePixels(image,0,row,width,1);
++	indexes=GetIndexes(image);
++
++	/* Rows are terminated by '\0'.  Note that rows can contain a '\0'	*/
++	/* as part of the run-length data, so '\0' does not delimit rows.	*/
++	/* (This occurs when multiplier is a multiple of 128 - 1)			*/
++	while ((c = ReadBlobByte(image)) != '\0')
++	{
++		pixel = (c & 0x7f) >> (7 - depth);
++		multiplier = c & mul_mask[(int)depth];
++
++		while (c >= 0x80)
++		{
++			c = ReadBlobByte(image);
++			multiplier = (multiplier << 7) + (c & 0x7f);
++		}
++		multiplier++;
++
++		for (i = 0; i < multiplier; i++)
++		{
++			/* For the lower depths, the "grain" of the multiplyer is		*/
++			/* course, so don't write past the width of the buffer.			*/
++			if (written < width)
++				indexes[written++] = pixel - 1;		/* BSB color idx starts at 1 */
++		}
++	}
++
++	if (written < width)
++	{
++		printf("Short row: Row %d written=%d width=%d\n", row, written, width);
++		/* Resyncronise by scanning for next NUL - not perfect since	*/
++		/* NUL can be found within the row's data.						*/
++		while ((c = ReadBlobByte(image)) != '\0')
++		{
++			if (c == -1)
++				break;
++		}
++	}
++}
++
++static Image *ReadBSBImage(const ImageInfo *image_info,
++  ExceptionInfo *exception)
++{
++  Image
++    *image;
++
++  unsigned int
++    status;
++
++  char		line[4096], *geometry;
++  int		i, num_colors, width, height, depth, table_start, first_row, red, green, blue;
++
++  /*
++    Open image file.
++  */
++  image=AllocateImage(image_info);
++  status=OpenBlob(image_info,image,ReadBinaryBlobMode,exception);
++  if (status == False)
++    ThrowReaderException(FileOpenWarning,"Unable to open file",image);
++
++  image->depth=8;
++  if (!AllocateImageColormap(image,256))
++    ThrowReaderException(ResourceLimitWarning,"Memory allocation failed",image);
++  /*
++    Determine width and height
++  */
++  depth = 0;
++  num_colors = 0;
++  while ( ReadBlobString(image, line) )
++  {
++  	if ( sscanf(line, "RGB/%d,%d,%d,%d", &i, &red, &green, &blue) == 4 )
++  	{
++  		image->colormap[i-1].red = ScaleCharToQuantum(red);
++  		image->colormap[i-1].green = ScaleCharToQuantum(green);
++  		image->colormap[i-1].blue = ScaleCharToQuantum(blue);
++  		num_colors++;
++  	}
++  	if ( (geometry = strstr(line, "RA=")) )
++  	{
++  		sscanf(geometry, "RA=%d,%d", &width, &height);
++  	}
++  	if (line[0] == 0x1a)			/* Control-Z */
++  	{
++  		depth = line[2];
++  		break;
++  	}
++  }
++
++  image->columns = width;
++  image->rows = height;
++  image->colors = num_colors;
++
++  /* Seek to start of first row */
++  SeekBlob(image, -4, SEEK_END);
++  table_start = ReadBlobMSBLong(image);
++  SeekBlob(image, table_start, SEEK_SET);
++  first_row = ReadBlobMSBLong(image);
++  SeekBlob(image, first_row, SEEK_SET);
++
++  /*
++    Decompress pixels row by row
++  */
++  for (i = 0; i < height; i++)
++  {
++	read_row(image, depth, width, i);
++  }
++
++  SyncImage(image);
++  CloseBlob(image);
++  return(image);
++}
++
++/*
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%   R e g i s t e r B S B I m a g e                                           %
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%
++%  Method RegisterBSBImage adds attributes for the BSB image format to
++%  the list of supported formats.  The attributes include the image format
++%  tag, a method to read and/or write the format, whether the format
++%  supports the saving of more than one frame to the same file or blob,
++%  whether the format supports native in-memory I/O, and a brief
++%  description of the format.
++%
++%  The format of the RegisterBSBImage method is:
++%
++%      RegisterBSBImage(void)
++%
++*/
++ModuleExport void RegisterBSBImage(void)
++{
++  MagickInfo
++    *entry;
++
++  entry=SetMagickInfo("KAP");
++  entry->decoder=(DecoderHandler) ReadBSBImage;
++  entry->encoder=(EncoderHandler) WriteBSBImage;
++  entry->description=AcquireString("BSB chart image format - NOAA/Maptech");
++  entry->module=AcquireString("KAP");
++  (void) RegisterMagickInfo(entry);
++}
++
++/*
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%   U n r e g i s t e r B S B I m a g e                                       %
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%
++%  Method UnregisterBSBImage removes format registrations made by the
++%  BSB module from the list of supported formats.
++%
++%  The format of the UnregisterBSBImage method is:
++%
++%      UnregisterBSBImage(void)
++%
++*/
++ModuleExport void UnregisterBSBImage(void)
++{
++  UnregisterMagickInfo("KAP");
++}
++
++/*
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%   W r i t e B S B I m a g e                                                 %
++%                                                                             %
++%                                                                             %
++%                                                                             %
++%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
++%
++%  Method WriteBSBImage writes an image to a file in the Wireless Bitmap
++%  (level 0) image format.
++%
++%  WriteBSBImage was contributed by Milan Votava <votava@mageo.cz>.
++%
++%  The format of the WriteBSBImage method is:
++%
++%      unsigned int WriteBSBImage(const ImageInfo *image_info,Image *image)
++%
++%  A description of each parameter follows.
++%
++%    o status: Method WriteBSBImage return True if the image is written.
++%      False is returned is there is a memory shortage or if the image file
++%      fails to write.
++%
++%    o image_info: Specifies a pointer to an ImageInfo structure.
++%
++%    o image:  A pointer to a Image structure.
++%
++%
++*/
++
++static void BSBWriteInteger(Image *image,const unsigned int value)
++{
++  int
++    bits,
++    flag,
++    n;
++
++  register int
++    i;
++
++  unsigned char
++    buffer[5],
++    octet;
++
++  n=1;
++  bits=28;
++  flag=False;
++  for(i=4; i >= 0; i--)
++  {
++    octet=((value >> bits) & 0x7f);
++    if (!flag && octet)
++      {
++        flag=True;
++        n=i+1;
++      }
++    buffer[4-i]=octet | (i && (flag || octet))*(0x01 << 7);
++    bits-=7;
++  }
++  (void) WriteBlob(image,n,(char *) buffer+5-n);
++}
++
++static unsigned int WriteBSBImage(const ImageInfo *image_info,Image *image)
++{
++  unsigned int
++    status;
++
++  /*
++    Open output image file.
++  */
++  status=OpenBlob(image_info,image,WriteBinaryBlobMode,&image->exception);
++  if (status == False)
++    ThrowWriterException(FileOpenWarning,"Unable to open file",image);
++  TransformRGBImage(image,RGBColorspace);
++  /*
++    Convert image to a bi-level image.
++  */
++  WriteBlobMSBShort(image,0);
++  BSBWriteInteger(image,image->columns);
++  BSBWriteInteger(image,image->rows);
++
++  CloseBlob(image);
++  return(True);
++}
+diff -Nru ImageMagick-5.5.7/magick/static.c ImageMagick-5.5.7-new/magick/static.c
+--- ImageMagick-5.5.7/magick/static.c	2003-11-20 17:15:53.000000000 +0000
++++ ImageMagick-5.5.7-new/magick/static.c	2004-01-19 13:23:12.000000000 +0000
+@@ -126,6 +126,7 @@
+   RegisterAVIImage();
+   RegisterAVSImage();
+   RegisterBMPImage();
++  RegisterBSBImage();
+   RegisterCAPTIONImage();
+   RegisterCLIPBOARDImage();
+   RegisterCMYKImage();

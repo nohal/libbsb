@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!-- $Id: bsb_file_format.html,v 1.2 2007/02/20 15:47:13 mikrom Exp $ $Name:  $ -->
+<head>
+	<title>libbsb - BSB File format</title>
+	<style type="text/css">
+	body { font-family: arial,helvetica,sans-serif; font-size: 1.0em; margin: 1; }
+	a { text-decoration: none; color: blue; background-color: transparent; }
+	a:hover { text-decoration: underline; }
+	img { border: 0; }
+	</style>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body>
+<H2>The BSB file format</H2>
+<p>
+A nautical chart set in BSB format consists of several files: main .BSB file and one or more .KAP files. A main BSB file contains chart set meta-data information (chart description, function, enumeration of .KAP files. Note that NOAA BSB charts are meant to be exact equivalent of paper charts, so they contain the same number of sub-charts (paper pages). The .BSB file is unusual in that it contains both ASCII text and binary data concatenated together and structured as follows:
+
+<ul>
+<li>Text header in DOS text format (CR-LF line-endings) terminated by &#60Control-Z&#62&#60NUL&#62
+<li>Binary section consisting of:
+	<ul>
+	<li>One or more rows of run-length compressed raster data
+	<li>An index table consisting of 32-bit integers storing file offsets to each image row
+	</ul>
+</ul>
+
+<h4>Text Header</h4>
+<p>
+Although described as proprietary by <a href="http://www.csc.noaa.gov/products/chartview/chartpaper.html">NOAA</a>, much of the information in the ASCII text header is self explanatory.  Each line begins with a 3 character token followed by a slash "/".  The remainder of the line depends upon the token, but in general consists of a list of comma separated values.  If the list of values is too long for 80 columns, the values for the token are continued on the next line by prefixing the new line with 4 spaces.  Comments are indicated with a leading "!".
+
+<pre>
+    ! An example BSB text header
+    VER/3.0
+    BSB/NA=Australia 3000000
+        NU=,RA=625,480,DU=50
+    KNP/SC=3000000,GD=,PR=LAMBERT CONFORMAL CONIC,PP=145.0
+        PI=0.0,SP=Unknown,0,SK=0.0
+        UN=METRES,SD=,DX=6000.0,DY=6000.0
+    OST/1
+    IFM/3
+    RGB/1,199,231,252
+    RGB/2,174,234,84
+    RGB/3,255,254,206
+    RGB/4,226,65,6
+    DTM/0.0,0.0
+</pre>
+
+<p>
+The text header is terminated with a &#60Control-Z&#62&#60NUL&#62 sequence (ASCII characters 26 and 0).
+
+Each line starts with a tag terminated by a '/'. The tags are usually 3 letters. The lines are terminated with the NL character. However, logical lines can continue when next line starts with spaces.
+
+Tags:
+<ul>
+<li><b>VER</b> - Version number of BSB format e.g. 1, 2.0, 3.0, 3.07, 4.0
+<li><b>BSB</b> &nbsp;&nbsp; (or <b>NOS</b> for older GEO/NOS or GEO/NO1 files)
+	<ul>
+	<li>RA=width,height - width and height of raster image data in pixels
+	<li>NA=Name given to the BSB chart (can represent more than one .KAP)
+	<li>NU=Number of chart (especially when more than one chart is grouped or tiled together)
+	<li>DU=Drawing Units in pixels/inch (same as DPI resolution) e.g. 50, 150, 175, 254, 300
+	</ul>
+<li><b>OST</b> - Offset STrip image lines (number of image rows per entry in the index table) e.g. 1
+<li><b>IFM</b> - Depth of the colormap (bits per pixel).  BSB supports 1 through 7 (2 through 127 max colors).
+<li><b>RGB</b> - Color definitions for the raster colormap of the form index,red,green,blue (index starts at 0, index 0 is not used in BSB). Note, there are more than one coloring schemes for different lighting conditions: DAY, DSK (dusk), NGT (night), GRY (gray), PRC (?), PRG (?).
+<li><b>KNP</b>
+	<ul>
+	<li>SC=Scale e.g. 25000
+	<li>GD=Geodetic Datum e.g. NAD83, WGS84
+	<li>PR=Projection e.g. LAMBERT CONFORMAL CONIC, MERCATOR
+	<li>PP=Projection Parameter (value depends upon Projection) e.g. 135.0
+	<li>PI=? e.g. 0.0, 0.033333, 0.083333, 2.0
+	<li>SP=?
+	<li>SK=Skew angle? e.g. 0.0
+	<li>TA=? e.g. 90
+	<li>UN=Units (for DX, DY and others) e.g. METRES, FATHOMS
+	<li>SD=Sounding Datum e.g. MEAN LOWER LOW WATER, HHWLT
+	<li>DX=distance (approx.) covered by one pixel in X direction
+	<li>DY=distance (approx.) covered by one pixel in Y direction
+	</ul>
+<li><b>KNQ</b>
+	<ul>
+	<li>P1=...,P2=...
+	<li>P3=...,P4=...
+	<li>P5=...,P6=...
+	</ul>
+<li><b>CED</b> - ? (appears to be optional for many applications)
+<li><b>REF</b> - Registration reference points (at least 3 points). The form is index, x raster coord, y raster coord, latitude, longitude
+<li><b>PLY</b> - Chart area (border) definition. List of points in clockwise order. Form is index, lattitude, longitude.
+<li><b>WPX,WPY</b> World-to-Pixel X/Y geotransformation to convert World coordinates (lat/lon) to accordingly X or Y of the raster. See explanation of geotransform below.
+<li><b>PWX,PWY</b> Pixel-to-World X/Y geotransformation to convert chart pixel coordinates coordinates (X/Y) to accordingly longitude or latitude of the raster. See explanation of geotransform below.
+<li><b>ERR</b> Exact meaning unknown - always thesame number of entries as REF points and always with 4 numbers. Possibly an error data for geotransformation of REF points.
+<li><b>DTM</b> - ? (appears to be optional for many applications)
+</ul>
+
+<h4>Geotransformation</h4>
+The WPX,WPY,PWX,PWY tags define coeffitients of a polynomial used to convert x,y of chart to latitude/longitude and vice versa. The tags specify order of the polynomial (first number) and then list corresponding coefitients. The polynomial has a general form of :
+
+<pre>
+    coeff[0] + coeff[1]*lon + coeff[2]*lat +
+    coeff[3]*lon*lon +
+    coeff[4]*lon*lat +
+    coeff[5]*lat*lat +
+    coeff[6]*lon*lon*lon +
+    coeff[7]*lon*lon*lat +
+    coeff[8]*lon*lat*lat +
+    coeff[9]*lat*lat*lat +
+    coeff[10]*lat*lat*lat*lat +
+    coeff[11]*lat*lat*lat*lat*lat
+</pre>
+where: 
+<ul>
+<li><b>coeff</b> is the list of coeffitiens as read from appropriate tag (not specified coordinates are zero)
+<li>lon/lat are input coordinates (can be really lon/lat or x/y of raster)
+<li> returns transformed coordinate according to supplied coeffs
+</ul>
+Note: the same polynomial, just with different coeffitients (as read from tags) is used for all transformations. See bsb_LLtoXY/bsb_XYtoLL functions for use example.
+
+<h4>Binary Section</h4>
+<p>
+The first byte after the &#60Control-Z&#62&#60NUL&#62 sequence is a single byte storing the depth of the image, duplicating the information from the IFM token.
+<p>
+Next are one or more rows of run-length encoded raster data terminated by &#60NUL&#62 characters.  Each row, when decompressed, represents one horizontal line of the image.
+<p>
+Rows start with one or more bytes representing the row number. The storage of the row number finishes when the byte is less than 128.  Row numbering starts at 1 rather than 0.
+<p>
+The next byte will indicate the color of a pixel using a colormap index. The nature of the bitstream packing limits the color depth to 7 bits. Therefore bytes of value greater than 127 as used to indicate that the next byte stores the 'run' length in addition to storing the colormap index.
+
+
+<h3>Authors/Contributors</h3>
+<p>
+The libbsb library and this web page was written by <a href="mailto:stuart_hc@users.sourceforge.net">Stuart Cunningham</a> with GIS related advice from <a href="mailto:asuraparaju@users.sourceforge.net">Anuradha Suraparaju</a>. Additional improvements made by <a href="mailto:mikrom@users.sourceforge.net">Michal Krombholz</a>. The big thanks go to Tom Gray for researching polynomial form of geotransfomration.  Feedback is welcome.
+<p>
+Copyright (&copy;) 2000-2007 <a href="mailto:stuart_hc@
+users.sourceforge.net">Stuart Cunningham</a>.
+
+<p>
+<a href="http://sourceforge.net"><img
+   style="border:0;width:88px;height:31px"
+   src="http://sourceforge.net/sflogo.php?group_id=73930&amp;type=1"
+   alt="SourceForge.net Logo"/></a>
+<a href="http://validator.w3.org/check?uri=referer"><img
+   style="border:0;width:88px;height:31px"
+   src="http://www.w3.org/Icons/valid-html401"
+   alt="Valid HTML 4.01!" height="31" width="88"></a>
+<a href="http://jigsaw.w3.org/css-validator/check/referer"><img
+   style="border:0;width:88px;height:31px"
+   src="http://jigsaw.w3.org/css-validator/images/vcss" 
+   alt="Valid CSS!"></a> 
+</body>
+</html>

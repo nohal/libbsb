@@ -19,7 +19,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- *  $Id: bsb2ppm.c,v 1.10 2004/08/13 18:37:46 stuart_hc Exp $
+ *  $Id: bsb2ppm.c,v 1.11 2007/02/05 17:11:56 mikrom Exp $
  *
  */
 
@@ -69,8 +69,7 @@ extern int main (int argc, char *argv[])
 	/* Read rows from bsb file and write rows to PPM */
 	for (y = 0; y < image.height; y++)
 	{
-		bsb_seek_to_row(&image, y);
-		bsb_read_row(&image, buf);
+		bsb_read_row_at(&image, y, buf);
 
 		/* Each pixel is a triplet of Red,Green,Blue samples */
 		for (x = 0; x < image.width; x++)
