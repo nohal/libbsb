@@ -2852,7 +2852,7 @@ case "$CC" in
 	*)
 		# override AC_PROG_CC default CFLAGS except when user specified CFLAGS
 		if test x"$orig_cflags" != x"$CFLAGS" ; then
-			CFLAGS="-g -O2 -W -Wall -Werror"
+			CFLAGS="-g -O2 -W -Wall"
 		fi
 		if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
