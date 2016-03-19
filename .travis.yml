@@ -18,6 +18,7 @@ before_install:
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install libpng-dev libtiff-dev ;fi
 script:
+  - ./configure
   - make
 
 env:
