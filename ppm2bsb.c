@@ -87,9 +87,25 @@ extern int main (int argc, char *argv[])
 		perror(argv[2]);
 		exit(1);
 	}
-	fscanf(ppm, "P%d\n", &magic);
-	fscanf(ppm, "%d %d\n", &image.width, &image.height);
-	fscanf(ppm, "%d\n", &max_sample);
+	int res = fscanf(ppm, "P%d\n", &magic);
+        if (res == EOF )
+        {
+                perror(argv[2]);
+                exit(1);
+        }
+	res = fscanf(ppm, "%d %d\n", &image.width, &image.height);
+        if (res == EOF )
+        {
+                perror(argv[2]);
+                exit(1);
+        }
+	res = fscanf(ppm, "%d\n", &max_sample);
+        if (res == EOF )
+        {
+                perror(argv[2]);
+                exit(1);
+        }
+
 	start_of_raster = ftell(ppm);
 
 	/* Count unique colors in the PPM file */
